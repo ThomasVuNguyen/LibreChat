@@ -1,0 +1,29 @@
+"on":
+    push:
+        branches:
+            - main
+name: Deploy to libre-chat
+jobs:
+    porter-deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+            - name: Set Github tag
+              id: vars
+              run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+            - name: Setup porter
+              uses: porter-dev/setup-porter@v0.1.0
+            - name: Deploy stack
+              timeout-minutes: 30
+              run: exec porter apply -f ./librechat.example.yaml
+              env:
+                PORTER_APP_NAME: libre-chat
+                PORTER_CLUSTER: "4860"
+                PORTER_DEPLOYMENT_TARGET_ID: 85eca8f1-41a3-4e09-b133-4d35a8e3e73b
+                PORTER_HOST: https://dashboard.porter.run
+                PORTER_PR_NUMBER: ${{ github.event.number }}
+                PORTER_PROJECT: "15972"
+                PORTER_REPO_NAME: ${{ github.event.repository.name }}
+                PORTER_TAG: ${{ steps.vars.outputs.sha_short }}
+                PORTER_TOKEN: ${{ secrets.PORTER_APP_15972_4860 }}
